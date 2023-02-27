@@ -1,0 +1,64 @@
+<title>Isometric Map Builder</title>
+<body style="background-color:grey;">
+<canvas id="canvas" width=2048 height=1024></canvas>
+<script src="js/iso.js"></script>
+<script src="js/game.js"></script>
+<br>
+<button onclick = "renderStyle='Iso';drawMap()">
+Draw Isometric
+</button>
+<button onclick = "renderStyle='2d';drawMap()">
+Draw 2D
+</button>
+<button onclick = "zoom(1)">
++
+</button>
+<button onclick = "zoom(-1)">
+-
+</button>
+<button onclick = "x=x-10;drawMap()">
+►
+</button>
+<button onclick = "x=x+10;drawMap()">
+◄
+</button>
+<button onclick = "y=y+10;drawMap()">
+▲
+</button>
+<button onclick = "y=y-10;drawMap()">
+▼
+</button>
+<button onclick = "rotateMap(90)">
+CW
+</button>
+<button onclick = "rotateMap(-90)">
+CCW
+</button>
+<button style="background-color: black" onclick = "color='black'">
+&nbsp;&nbsp;
+</button>
+<button style="background-color: white" onclick = "color='white'">
+&nbsp;&nbsp;
+</button>
+<button onclick = "block = grassImg">
+Grass
+</button>
+<button onclick = "block = defaultIso">
+Paving
+</button>
+<button onclick = "block = crateImg">
+Crate
+</button>
+<button onclick = "block = dockImg">
+Dock
+</button>
+<input type="number" id="width" name="width" value=16 min="1" style="width: 50;" onblur = "mapHeight=value;"> x
+<input type="number" id="height" name="height" value=16 min="1" style="width: 50;" onblur = "mapWidth=value;">
+<button onclick = "newMap()">
+New Map
+</button>
+<p>Scroll in and out of the map using the mouse wheel.</p>
+<p>Hold and drag the mouse wheel to move around the map.</p>
+<p>Use the 'z' and 'x' keys to rotate the map.</p>
+<p>Use number keys to select tile types. 1: Grass, 2: Paving, 3: Crate</p>
+<p>Use the 'q' and 'w' keys to switch render style (2d not fully implemented at present.)</p>
