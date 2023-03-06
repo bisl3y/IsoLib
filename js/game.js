@@ -7,6 +7,7 @@ crateImg.src = "img/crate_iso_0.gif";
 const dockImg = new tileBlock('prop',4);
 dockImg.src = "img/dock_iso_x4.gif";
 
+let heightLimit = -3;
 let tileSize = 48;
 let renderStyle = "Iso";
 let x = canvas.width / 2;
@@ -17,6 +18,7 @@ let angle = 0;
 let mapWidth = 16;
 let mapHeight = 16;
 let outline = false;
+let isMouseDown = false;
 
 function drawIso() {
     renderStyle = "Iso";
@@ -53,6 +55,24 @@ function setTile(event) {
         draw2d();
     }
 };
+
+//canvas.addEventListener("mousedown", mouseDown);
+
+function mouseDown(event){
+	if(event.button == 0){
+	isMouseDown = true;
+	console.log('down');
+	}
+}
+
+//canvas.addEventListener("mouseup", mouseUp);
+
+function mouseUp(event){
+	if(event.button == 0){
+	isMouseDown = false;
+	console.log('up');
+	}
+}
 
 canvas.addEventListener("wheel", zoom);
 
@@ -146,7 +166,7 @@ function highlight(event){
 	let col = hlTile[0]
 	let row = hlTile[1]
 	map.clearHighlights();
-	if (col >= 0 && col < map.mapCols && row >= 0 && row < map.mapRows){
+	if(map.isTile(col,row)){
 	map.grid[col][row].highlight = true;
 	drawMap();
 	}

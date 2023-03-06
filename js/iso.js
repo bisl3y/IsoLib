@@ -32,6 +32,9 @@ class tile {
             this.tilePath(x, y, tileSize);
             ctx.fillStyle = this.shade;
             ctx.fill();
+			if (this.highlight == true) {
+			this.drawOverlay(x, y + (this.vOffset - 1) * tileSize, tileSize);
+			}
             ctx.stroke();
         }
         this.draw2d = function draw2d(x, y, tileSize) {
@@ -67,7 +70,10 @@ class imageTile extends tile {
         }
         this.drawIso = function drawIso(x, y, tileSize) {
             let widthOffsetGround = this.ground.width / this.ground.angles;
-            ctx.drawImage(this.ground, 0, 0, widthOffsetGround, this.ground.height, x - tileSize, y - tileSize * this.ground.height / 64 + tileSize * this.vOffset, widthOffsetGround * tileSize / 64, this.ground.height * tileSize / 64);
+			//do the following in reverse
+			for(let i = 1; i>=this.vOffset; i-=0.5){
+			ctx.drawImage(this.ground, 0, 0, widthOffsetGround, this.ground.height, x - tileSize, y - tileSize * this.ground.height / 64 + tileSize * i, widthOffsetGround * tileSize / 64, this.ground.height * tileSize / 64);	
+			}            
             if (outline == true) {
 			this.drawOutline(x, y + (this.vOffset - 1) * tileSize, tileSize);		
             }
@@ -186,31 +192,73 @@ class map {
             }
         }
 
-        this.findTileID = function findTileID(mouseX, mouseY) {
-			//let vOffset = 1
+        this.findTileID = function findTileID(mouseX, mouseY) {			
             let rotOffsetY = -this.mapRows / 2 * tileSize / 2 - this.mapCols / 2 * tileSize / 2
                 let rotOffsetX = this.mapRows / 2 * tileSize - this.mapCols / 2 * tileSize
-                let row = Math.floor((mouseY - y - rotOffsetY) / tileSize - (mouseX - x - rotOffsetX) / (tileSize * 2)) + 1;
-            let col = Math.floor((mouseX - x - rotOffsetX) / tileSize / 2 + (mouseY - y - rotOffsetY) / tileSize) + 1;
+                let row = (mouseY - y - rotOffsetY) / tileSize - (mouseX - x - rotOffsetX) / (tileSize * 2)+ 1 ;
+            let col = (mouseX - x - rotOffsetX) / tileSize / 2 + (mouseY - y - rotOffsetY) / tileSize + 1 ;
             if (angle == 90) {
                 rotOffsetY = this.mapRows / 2 * tileSize / 2 - this.mapCols / 2 * tileSize / 2 - tileSize / 2
                     rotOffsetX = this.mapRows / 2 * tileSize + this.mapCols / 2 * tileSize - tileSize
-                    row = Math.floor((-mouseY + y + rotOffsetY) / tileSize - (mouseX - x - rotOffsetX) / (tileSize * 2)) + 0;
-                col = Math.floor((-mouseX + x + rotOffsetX) / tileSize / 2 + (mouseY - y - rotOffsetY) / tileSize) + 1;
+                    row = (-mouseY + y + rotOffsetY) / tileSize - (mouseX - x - rotOffsetX) / (tileSize * 2);
+                col = (-mouseX + x + rotOffsetX) / tileSize / 2 + (mouseY - y - rotOffsetY) / tileSize + 1 ;
             }
             if (angle == 180) {
                 rotOffsetY = this.mapRows / 2 * tileSize / 2 + this.mapCols / 2 * tileSize / 2 - tileSize
                     rotOffsetX = -this.mapRows / 2 * tileSize + this.mapCols / 2 * tileSize
-                    row = Math.floor((-mouseY + y + rotOffsetY) / tileSize + (mouseX - x - rotOffsetX) / (tileSize * 2)) + 0;
-                col = Math.floor((-mouseX + x + rotOffsetX) / tileSize / 2 - (mouseY - y - rotOffsetY) / tileSize) + 0;
+                    row = (-mouseY + y + rotOffsetY) / tileSize + (mouseX - x - rotOffsetX) / (tileSize * 2);
+                col = (-mouseX + x + rotOffsetX) / tileSize / 2 - (mouseY - y - rotOffsetY) / tileSize;
             }
             if (angle == 270) {
                 rotOffsetY = -this.mapRows / 2 * tileSize / 2 + this.mapCols / 2 * tileSize / 2 - tileSize / 2
                     rotOffsetX = -this.mapRows / 2 * tileSize - this.mapCols / 2 * tileSize + tileSize
-                    row = Math.floor((mouseY - y - rotOffsetY) / tileSize + (mouseX - x - rotOffsetX) / (tileSize * 2)) + 1;
-                col = Math.floor((mouseX - x - rotOffsetX) / tileSize / 2 - (mouseY - y - rotOffsetY) / tileSize) + 0;
-            }
-			//console.log(map.grid[col][row]);
+                    row = (mouseY - y - rotOffsetY) / tileSize + (mouseX - x - rotOffsetX) / (tileSize * 2) + 1;
+                col = (mouseX - x - rotOffsetX) / tileSize / 2 - (mouseY - y - rotOffsetY) / tileSize;
+            }			
+			let colOffset = 0;
+			let rowOffset = 0;
+			if(angle == 0){
+			for(let i = 0.5; i<5; i += 0.5){
+				if(this.isTile(Math.floor(col +i),Math.floor(row+i))){
+				if(this.grid[Math.floor(col+i)][Math.floor(row+i)].vOffset == 1-i){
+				colOffset = i;
+				rowOffset = i;
+				}
+			}
+			}	
+			}
+			if(angle == 90){
+			for(let i = 0.5; i<5; i += 0.5){
+				if(this.isTile(Math.floor(col +i),Math.floor(row-i))){
+				if(this.grid[Math.floor(col+i)][Math.floor(row-i)].vOffset == 1-i){
+				colOffset = +i;
+				rowOffset = -i;
+				}
+			}
+			}	
+			}	
+			if(angle == 180){
+			for(let i = 0.5; i<5; i += 0.5){
+				if(this.isTile(Math.floor(col -i),Math.floor(row-i))){
+				if(this.grid[Math.floor(col-i)][Math.floor(row-i)].vOffset == 1-i){
+				colOffset = -i;
+				rowOffset = -i;
+				}
+			}
+			}	
+			}
+			if(angle == 270){
+			for(let i = 0.5; i<5; i += 0.5){
+				if(this.isTile(Math.floor(col -i),Math.floor(row+i))){
+				if(this.grid[Math.floor(col-i)][Math.floor(row+i)].vOffset == 1-i){
+				colOffset = -i;
+				rowOffset = +i;
+				}
+			}
+			}	
+			}			
+			col = Math.floor(col+colOffset);
+			row = Math.floor(row+rowOffset);
             return [col, row];
         }
 		
@@ -226,10 +274,19 @@ class map {
             let xy = this.findTileID(mouseX, mouseY);
             let col = xy[0];
             let row = xy[1];
-            if (col >= 0 && col < this.mapCols && row >= 0 && row < mapRows) {
+            if(this.isTile(col,row)) {
                 this.grid[col][row].fillTile()
             }
         }
+
+		this.isTile = function isTile(col,row){
+			if (col >= 0 && col < this.mapCols && row >= 0 && row < mapRows){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
 
         this.moveGroundUp = function moveGroundUp(mouseX, mouseY, altKey) {
             let xy = this.findTileID(mouseX, mouseY);
@@ -237,9 +294,13 @@ class map {
             let row = xy[1];
             if (col >= 0 && col < this.mapCols && row >= 0 && row < mapRows) {
                 if (altKey) {
+					if(this.grid[col][row].vOffset + 0.5 <= 1){					
                     this.grid[col][row].vOffset += 0.5;
+					}
                 } else {
+					if(this.grid[col][row].vOffset - 0.5 >= heightLimit){
                     this.grid[col][row].vOffset -= 0.5;
+					}
                 }
             }
         }
