@@ -1,13 +1,15 @@
 class tileBlock extends Image {
-    constructor(type, angleNum) {
+    constructor(type, angleNum, dimensions) {
         super();
         this.blockType = type;
         this.angles = angleNum;
+		this.dimensions = dimensions;
+		this.propIndex = 0;
     }
 }
 
-const defaultIso = new tileBlock('ground', 1);
-defaultIso.src = "img/pavingBlock_iso_0.gif";
+const defaultIso = new tileBlock('ground', 1, [1,1]);
+defaultIso.src = "img/pavingBlock_iso_0.png";
 
 class tile {
     constructor() {
@@ -83,9 +85,37 @@ class imageTile extends tile {
             if (this.prop instanceof tileBlock) {
                 let widthOffsetProp = this.prop.width / this.prop.angles
                     let angleOffset = angle / 360;
+					let indexOffset = 1/this.prop.dimensions[1];
                 if (this.prop.angles == 4) {
-                    ctx.drawImage(this.prop, this.prop.width * angleOffset, 0, widthOffsetProp, this.prop.height, x - tileSize, y - tileSize * this.prop.height / 64 +(this.vOffset-1)*tileSize, widthOffsetProp * tileSize / 64, this.prop.height * tileSize / 64);
-                } else {
+					if(this.prop.dimensions[1]>1){ //this feels like a hack
+					let segmentOffset = this.prop.width/this.prop.angles/(this.prop.dimensions[1]+1)
+					let sourceX = this.prop.width * angleOffset +segmentOffset*this.propIndex;
+					let sourceY = -(this.propIndex*segmentOffset)/2;	
+					let sourceWidth = this.prop.width/this.prop.angles/((this.prop.dimensions[1]+1)/2);
+					let sourceHeight = this.prop.height
+					let destinationX = x - tileSize
+					let destinationY = y - tileSize * this.prop.height / 64
+					let destinationWidth = tileSize*2
+					let destinationHeight = this.prop.height * tileSize / 64
+					if(angle==180){
+					sourceX = (this.prop.width * angleOffset) + (this.prop.width/this.prop.angles) -segmentOffset*this.propIndex -segmentOffset*2;
+					sourceY = -segmentOffset/2+(this.propIndex*segmentOffset/2);										
+					}
+                    else if(angle==90){
+					sourceX = this.prop.width * angleOffset +segmentOffset*this.propIndex;
+					sourceY = (this.propIndex*segmentOffset)/2 - (segmentOffset)/2;
+					}
+					else if(angle==270){
+					sourceX = (this.prop.width * angleOffset) + (this.prop.width/this.prop.angles) -segmentOffset*this.propIndex -segmentOffset*2;
+					sourceY = -this.propIndex*segmentOffset/2;
+					}
+					ctx.drawImage(this.prop, sourceX, sourceY, sourceWidth, sourceHeight, destinationX, destinationY +(this.vOffset-1)*tileSize, destinationWidth, destinationHeight);
+					}
+					else{
+					ctx.drawImage(this.prop, this.prop.width * angleOffset, 0, widthOffsetProp, this.prop.height, x - tileSize, y - tileSize * this.prop.height / 64 +(this.vOffset-1)*tileSize, widthOffsetProp * tileSize / 64, this.prop.height * tileSize / 64);
+					}
+                } 
+				else {
                     ctx.drawImage(this.prop, 0, 0, widthOffsetProp, this.prop.height, x - tileSize, y - tileSize * this.prop.height / 64 +(this.vOffset-1)*tileSize, widthOffsetProp * tileSize / 64, this.prop.height * tileSize / 64);
                 }
             }			
@@ -270,6 +300,17 @@ class map {
 		}
 		}
 		
+		this.setTileByID = function setTileByID(col, row) {
+            if(this.isTile(col,row)) {
+				for(let i = 0; i<block.dimensions[1]; i++){
+                this.grid[col][row-i].fillTile()
+				if (block.blockType == 'prop') {
+				this.grid[col][row-i].propIndex = i;
+				}
+				}
+            }
+        }
+		
         this.setTileIso = function setTileIso(mouseX, mouseY) {
             let xy = this.findTileID(mouseX, mouseY);
             let col = xy[0];
@@ -304,6 +345,22 @@ class map {
                 }
             }
         }
+		
+		
+		this.moveGroundUpbyID = function moveGroundUp(col, row, altKey) {
+            if (col >= 0 && col < this.mapCols && row >= 0 && row < mapRows) {
+                if (altKey) {
+					if(this.grid[col][row].vOffset + 0.5 <= 1){					
+                    this.grid[col][row].vOffset += 0.5;
+					}
+                } else {
+					if(this.grid[col][row].vOffset - 0.5 >= heightLimit){
+                    this.grid[col][row].vOffset -= 0.5;
+					}
+                }
+            }
+        }
+		
     }
 };
 
