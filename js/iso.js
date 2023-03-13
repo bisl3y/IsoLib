@@ -4,7 +4,6 @@ class tileBlock extends Image {
         this.blockType = type;
         this.angles = angleNum;
 		this.dimensions = dimensions;
-		this.propIndex = 0;
     }
 }
 
@@ -20,6 +19,9 @@ class tile {
 			this.highlight = false;
 
         }
+		this.propIndex = 0;
+		this.tileAngle = 0;
+		
 		this.tilePath = function tilePath(x, y, tileSize) {
 		ctx.beginPath();
             ctx.moveTo(x, y);
@@ -84,8 +86,13 @@ class imageTile extends tile {
 			}
             if (this.prop instanceof tileBlock) {
                 let widthOffsetProp = this.prop.width / this.prop.angles
-                    let angleOffset = angle / 360;
-					let indexOffset = 1/this.prop.dimensions[1];
+                    //let angleOffset = angle / 360;
+					let relativeAngle = angle+this.tileAngle;
+					if(relativeAngle >= 360){
+						relativeAngle = relativeAngle - 360;
+					}
+					let angleOffset = 0;
+					let indexOffset = 1/this.prop.dimensions[1];					
                 if (this.prop.angles == 4) {
 					if(this.prop.dimensions[1]>1){ //this feels like a hack
 					let segmentOffset = this.prop.width/this.prop.angles/(this.prop.dimensions[1]+1)
@@ -97,21 +104,25 @@ class imageTile extends tile {
 					let destinationY = y - tileSize * this.prop.height / 64
 					let destinationWidth = tileSize*2
 					let destinationHeight = this.prop.height * tileSize / 64
-					if(angle==180){
+					if(relativeAngle==180){
+					angleOffset = 0.5
 					sourceX = (this.prop.width * angleOffset) + (this.prop.width/this.prop.angles) -segmentOffset*this.propIndex -segmentOffset*2;
 					sourceY = -segmentOffset/2+(this.propIndex*segmentOffset/2);										
 					}
-                    else if(angle==90){
+                    else if(relativeAngle == 90){
+					angleOffset = 0.25
 					sourceX = this.prop.width * angleOffset +segmentOffset*this.propIndex;
 					sourceY = (this.propIndex*segmentOffset)/2 - (segmentOffset)/2;
 					}
-					else if(angle==270){
+					else if(relativeAngle == 270){
+					angleOffset = 0.75
 					sourceX = (this.prop.width * angleOffset) + (this.prop.width/this.prop.angles) -segmentOffset*this.propIndex -segmentOffset*2;
 					sourceY = -this.propIndex*segmentOffset/2;
 					}
 					ctx.drawImage(this.prop, sourceX, sourceY, sourceWidth, sourceHeight, destinationX, destinationY +(this.vOffset-1)*tileSize, destinationWidth, destinationHeight);
 					}
 					else{
+					angleOffset = relativeAngle/360;
 					ctx.drawImage(this.prop, this.prop.width * angleOffset, 0, widthOffsetProp, this.prop.height, x - tileSize, y - tileSize * this.prop.height / 64 +(this.vOffset-1)*tileSize, widthOffsetProp * tileSize / 64, this.prop.height * tileSize / 64);
 					}
                 } 
@@ -301,15 +312,46 @@ class map {
 		}
 		
 		this.setTileByID = function setTileByID(col, row) {
-            if(this.isTile(col,row)) {
+            if(this.isTile(col,row)) {				
 				for(let i = 0; i<block.dimensions[1]; i++){
-                this.grid[col][row-i].fillTile()
+				if (propAngle==0 && this.isTile(col, row-i)){
+                this.grid[col][row-i].fillTile()				
 				if (block.blockType == 'prop') {
 				this.grid[col][row-i].propIndex = i;
+				this.grid[col][row-i].tileAngle = 0;
 				}
+				}
+				else if (propAngle==180 && this.isTile(col, row+i)){
+                this.grid[col][row+i].fillTile();				
+				if (block.blockType == 'prop') {
+				this.grid[col][row+i].propIndex = i;
+				this.grid[col][row+i].tileAngle = 180;
+				}				
+				}
+				else if (propAngle==90 && this.isTile(col+i, row)){
+                this.grid[col+i][row].fillTile();				
+				if (block.blockType == 'prop') {
+				this.grid[col+i][row].propIndex = i;
+				this.grid[col+i][row].tileAngle = 90;
+				}				
+				}
+				else if (propAngle==270 && this.isTile(col-i, row)){
+                this.grid[col-i][row].fillTile();				
+				if (block.blockType == 'prop') {
+				this.grid[col-i][row].propIndex = i;
+				this.grid[col-i][row].tileAngle = 270;
+				}				
+				}
+				
 				}
             }
         }
+		
+		this.clearPropByID = function clearPropByID(col, row) {
+            if(this.isTile(col,row)) {				
+				this.grid[col][row].prop = null;				
+				}
+            }
 		
         this.setTileIso = function setTileIso(mouseX, mouseY) {
             let xy = this.findTileID(mouseX, mouseY);

@@ -10,6 +10,10 @@ const deskImg = new tileBlock('prop', 4, [1,2]);
 deskImg.src = "img/desk_iso_x4.png";
 const plant1Img = new tileBlock('prop', 4, [1,1]);
 plant1Img.src = "img/plant1_iso_x4.png";
+const copierImg = new tileBlock('prop', 4, [1,1]);
+copierImg.src = "img/copier_iso_x4.png";
+const armchairImg = new tileBlock('prop', 4, [1,1]);
+armchairImg.src = "img/armchair_iso_x4.png";
 
 let heightLimit = -3;
 let tileSize = 48;
@@ -19,12 +23,16 @@ let y = canvas.height / 2;
 let color = 'black';
 let block = crateImg;
 let angle = 0;
+let propAngle = 0;
 let mapWidth = 16;
 let mapHeight = 16;
 let outline = false;
-let isMouseDown = false;
+let mouseIsDown = false;
 let clickStart = [0, 0];
 let selection = [];
+let cursorX = 0;
+let cursorY = 0;
+
 
 function drawIso() {
     renderStyle = "Iso";
@@ -49,8 +57,9 @@ canvas.addEventListener("mousedown", mouseDown);
 
 function mouseDown(event) {
     if (event.button == 0) {
-        isMouseDown = true;
+        mouseIsDown = true;
         clickStart = map.findTileID(event.offsetX, event.offsetY);
+		highlight();
         //console.log(clickStart);
     }
 }
@@ -59,7 +68,7 @@ canvas.addEventListener("mouseup", mouseUp);
 
 function mouseUp(event) {
     if (event.button == 0) {
-        isMouseDown = false;
+        mouseIsDown = false;
     }
 }
 
@@ -102,6 +111,22 @@ function rotateMap(rot) {
         angle = 270;
     }
     //drawMap();
+};
+
+addEventListener("keydown", rotateProp);
+
+function rotateProp(rot) {
+    if (rot instanceof Event) {
+        if (rot.key == 'r') {
+            propAngle = propAngle + 90;
+        }
+    }
+    if (propAngle == 360) {
+        propAngle = 0
+    } else if (propAngle == -90) {
+        propAngle = 270;
+    }
+    highlight();
 };
 
 addEventListener("keydown", tileSelect);
@@ -149,20 +174,37 @@ function scrollMap(event) {
 }
 
 canvas.addEventListener("mousemove", highlight);
-canvas.addEventListener("mousedown", highlight);
 
 function highlight(event) {
-    let hlTile = map.findTileID(event.offsetX, event.offsetY);
+	if(typeof event === 'object' && event.type=="mousemove"){
+	cursorX=event.offsetX;
+	cursoyY=event.offsetY;
+	}
+    let hlTile = map.findTileID(cursorX, cursoyY);
     let col = hlTile[0]
         let row = hlTile[1]
-        //if(isMouseDown == false){
+        //if(mouseIsDown == false){
         map.clearHighlights();
     //}
-    if (isMouseDown) {
+    if (mouseIsDown) {
         highlightGrid(clickStart[0], clickStart[1], col, row);
 		selectGrid(clickStart[0], clickStart[1], col, row);
-    } else if (map.isTile(col, row)) {
-        map.grid[col][row].highlight = true;
+    } else{
+		for(let i = block.dimensions[1]-1; i>=0; i--){
+		if (propAngle==0 && map.isTile(col, row-i)){
+        map.grid[col][row - i].highlight = true;
+		}
+		else if (propAngle==90 && map.isTile(col+i, row)){
+        map.grid[col + i][row].highlight = true;
+		}
+		else if (propAngle==180 && map.isTile(col, row+i)){
+        map.grid[col][row + i].highlight = true;
+		}
+		else if (propAngle==270 && map.isTile(col-i, row)){
+        map.grid[col - i][row].highlight = true;
+		}
+		}
+		
         //drawMap();
     }
 }
@@ -251,7 +293,12 @@ function setTile(event) {
             //map.moveGroundUp(event.offsetX, event.offsetY, event.altKey);
         } else {
 			for(let i = 0; i < selection.length; i++){
+			if(event.altKey){
+			map.clearPropByID(selection[i][0], selection[i][1]);	
+			}
+			else{
 			map.setTileByID(selection[i][0], selection[i][1]);
+			}
 			}
             //map.setTileIso(event.offsetX, event.offsetY);
         }
