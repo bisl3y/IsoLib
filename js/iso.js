@@ -17,8 +17,10 @@ class tile {
         this.fillTile = function fillTile() {
             this.shade = color;
 			this.highlight = false;
-
         }
+		this.highlightEdge = false;
+		this.selectedEdge = 2;
+		this.walls = [0,0,0,0];
 		this.propIndex = 0;
 		this.tileAngle = 0;
 		
@@ -31,6 +33,48 @@ class tile {
             ctx.closePath();
         }
 		
+		this.wallPath = function wallPath(x, y, tileSize, side) {
+		if(side == 3){
+		ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - tileSize, y - tileSize / 2);
+		ctx.lineTo(x - tileSize, y - tileSize / 2-tileSize);
+		ctx.lineTo(x, y-tileSize);
+		ctx.closePath();
+		}
+		if(side == 2){
+		ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + tileSize, y - tileSize / 2);
+		ctx.lineTo(x + tileSize, y - tileSize / 2 -tileSize);
+		ctx.lineTo(x, y-tileSize);
+		ctx.closePath();
+		}
+		else if(side == 1){
+		ctx.beginPath();
+        ctx.moveTo(x + tileSize, y - tileSize / 2);
+        ctx.lineTo(x + tileSize, y - tileSize / 2 -tileSize);
+		ctx.lineTo(x , y-tileSize*2);
+		ctx.lineTo(x, y-tileSize);
+		ctx.closePath();
+		}
+		else if(side == 0){
+		ctx.beginPath();
+        ctx.moveTo(x - tileSize, y - tileSize / 2);
+        ctx.lineTo(x - tileSize, y - tileSize / 2 -tileSize);
+		ctx.lineTo(x , y-tileSize*2);
+		ctx.lineTo(x, y-tileSize);
+		ctx.closePath();
+		}
+        }
+		
+		this.drawIsoWall = function drawIsoWall(x, y, tileSize, side){
+		ctx.beginPath(); //without this i was filling in the highlight path with the wall colour
+		this.wallPath(x, y, tileSize, side);
+		ctx.fillStyle = 'white';
+		ctx.fill();
+		ctx.stroke();
+		}
 		
         this.drawIso = function drawIso(x, y, tileSize) {
             this.tilePath(x, y, tileSize);
@@ -52,9 +96,41 @@ class tile {
             this.tilePath(x, y, tileSize);
             ctx.stroke();
         }
+		
+			this.tileEdge = function tileEdge(x, y, tileSize) {
+			ctx.beginPath(); //should this be a case?
+			if(this.selectedEdge==2){
+			ctx.moveTo(x, y);
+            ctx.lineTo(x + tileSize, y - tileSize / 2);
+			}
+			else if(this.selectedEdge==1){
+			ctx.moveTo(x + tileSize, y - tileSize / 2);
+			ctx.lineTo(x, y - tileSize);
+			}
+			else if(this.selectedEdge==0){
+			ctx.moveTo(x, y - tileSize);	
+			ctx.lineTo(x - tileSize, y - tileSize / 2);
+			}
+			else if(this.selectedEdge==3){
+			ctx.moveTo(x - tileSize, y - tileSize / 2);
+			ctx.lineTo(x, y);
+			}
+                               
+        }
+				
+			this.drawEdge = function drawEdge(x, y, tileSize) {
+            this.tileEdge(x, y, tileSize);
+			ctx.lineWidth = 5;
+			ctx.strokeStyle = 'rgba(0,255,255,0.5)';
+            ctx.stroke();
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = 'black';
+        }
+		
+		
 		    this.drawOverlay = function drawOverlay(x, y, tileSize) {
             this.tilePath(x, y, tileSize);
-			ctx.fillStyle = 'rgba(0,255,255,0.5)';
+			ctx.fillStyle = 'rgba(0,255,255,0.5)';		
             ctx.fill();
         }
     }
@@ -65,8 +141,11 @@ class imageTile extends tile {
         super();
         this.ground = defaultIso;
         this.prop = null;
-        this.fillTile = function fillTile() {
-            if (block.blockType == 'prop') {
+        this.fillTile = function fillTile(edge=0) {
+			if(selectionType == "walls"){
+				this.walls[edge] = 1;
+			}
+            else if (block.blockType == 'prop') {
                 this.prop = block;
             } else {
                 this.ground = block;
@@ -77,12 +156,20 @@ class imageTile extends tile {
 			//do the following in reverse
 			for(let i = 1; i>=this.vOffset; i-=0.5){
 			ctx.drawImage(this.ground, 0, 0, widthOffsetGround, this.ground.height, x - tileSize, y - tileSize * this.ground.height / 64 + tileSize * i, widthOffsetGround * tileSize / 64, this.ground.height * tileSize / 64);	
-			}            
-            if (outline == true) {
-			this.drawOutline(x, y + (this.vOffset - 1) * tileSize, tileSize);		
-            }
+			}
 			if (this.highlight == true) {
 			this.drawOverlay(x, y + (this.vOffset - 1) * tileSize, tileSize);
+			}
+			if (outline == true) {
+			this.drawOutline(x, y + (this.vOffset - 1) * tileSize, tileSize);		
+            }
+			if (this.highlightEdge == true) {
+			this.drawEdge(x, y + (this.vOffset - 1) * tileSize, tileSize);
+			}
+			for(let i =0;i<2;i++){ //draw any walls
+			if(this.walls[i]){
+			this.drawIsoWall(x, y + (this.vOffset - 1) * tileSize, tileSize, i);	
+			}
 			}
             if (this.prop instanceof tileBlock) {
                 let widthOffsetProp = this.prop.width / this.prop.angles
@@ -129,8 +216,16 @@ class imageTile extends tile {
 				else {
                     ctx.drawImage(this.prop, 0, 0, widthOffsetProp, this.prop.height, x - tileSize, y - tileSize * this.prop.height / 64 +(this.vOffset-1)*tileSize, widthOffsetProp * tileSize / 64, this.prop.height * tileSize / 64);
                 }
-            }			
+            }		
+			for(let i =2;i<4;i++){ //draw any walls
+			if(this.walls[i]){
+			this.drawIsoWall(x, y + (this.vOffset - 1) * tileSize, tileSize, i);	
+			}
+			}
+			
         }
+		
+
     }
 }
 
@@ -233,7 +328,7 @@ class map {
             }
         }
 
-        this.findTileID = function findTileID(mouseX, mouseY) {			
+        this.floatTileID = function floatTileID(mouseX, mouseY) {			
             let rotOffsetY = -this.mapRows / 2 * tileSize / 2 - this.mapCols / 2 * tileSize / 2
                 let rotOffsetX = this.mapRows / 2 * tileSize - this.mapCols / 2 * tileSize
                 let row = (mouseY - y - rotOffsetY) / tileSize - (mouseX - x - rotOffsetX) / (tileSize * 2)+ 1 ;
@@ -297,15 +392,25 @@ class map {
 				}
 			}
 			}	
-			}			
-			col = Math.floor(col+colOffset);
-			row = Math.floor(row+rowOffset);
+			}						
+			//col = Math.floor(col+colOffset);
+			//row = Math.floor(row+rowOffset);
+			col = col+colOffset;
+			row = row+rowOffset;
             return [col, row];
         }
 		
+		this.findTileID = function findTileID(mouseX, mouseY){
+			let floats = this.floatTileID(mouseX, mouseY)
+			let col = Math.floor(floats[0])
+			let row = Math.floor(floats[1])
+			return [col, row];
+		}
+		
 		this.clearHighlights = function clearHighlights(){
 		for (let col = 0; col < this.mapCols; col++) {
-             for (let row = 0; row < this.mapRows; row++) {                             
+             for (let row = 0; row < this.mapRows; row++) {    
+				  this.grid[col][row].highlightEdge = false;
                   this.grid[col][row].highlight = false;
                             }			
 		}
@@ -361,6 +466,17 @@ class map {
                 this.grid[col][row].fillTile()
             }
         }
+
+		    this.setWallIso = function setWallIso(mouseX, mouseY) {
+            let xy = this.findTileID(mouseX, mouseY);
+			let side = selectEdge(mouseX,mouseY);
+            let col = xy[0];
+            let row = xy[1];
+            if(this.isTile(col,row)) {
+                this.grid[col][row].fillTile(side)
+            }
+        }
+
 
 		this.isTile = function isTile(col,row){
 			if (col >= 0 && col < this.mapCols && row >= 0 && row < mapRows){

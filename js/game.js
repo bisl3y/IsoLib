@@ -32,7 +32,7 @@ let clickStart = [0, 0];
 let selection = [];
 let cursorX = 0;
 let cursorY = 0;
-
+let selectionType = "ground";
 
 function drawIso() {
     renderStyle = "Iso";
@@ -173,13 +173,27 @@ function scrollMap(event) {
     }
 }
 
+addEventListener("keydown", switchHighlightStyle);
+
+function switchHighlightStyle(event) {
+	if(event.key == 'e'){
+	if(selectionType == "ground"){
+		selectionType = "walls";
+	}
+	else if(selectionType == "walls"){
+		selectionType = "ground";
+	}
+	}
+};
+
 canvas.addEventListener("mousemove", highlight);
 
 function highlight(event) {
+	if(selectionType == "ground"){
 	if(typeof event === 'object' && event.type=="mousemove"){
 	cursorX=event.offsetX;
 	cursoyY=event.offsetY;
-	}
+	}	
     let hlTile = map.findTileID(cursorX, cursoyY);
     let col = hlTile[0]
         let row = hlTile[1]
@@ -204,9 +218,61 @@ function highlight(event) {
         map.grid[col - i][row].highlight = true;
 		}
 		}
-		
-        //drawMap();
     }
+	}
+}
+
+canvas.addEventListener("mousemove", highlightEdge); 
+
+function highlightEdge(event) {
+	if(selectionType == "walls"){
+	if(typeof event === 'object' && event.type=="mousemove"){
+	cursorX=event.offsetX;
+	cursoyY=event.offsetY;
+	}	
+    let hlTile = map.findTileID(cursorX, cursoyY);
+    let col = hlTile[0]
+        let row = hlTile[1]
+        //if(mouseIsDown == false){
+        map.clearHighlights();
+    //}
+    if (mouseIsDown) {
+        highlightGrid(clickStart[0], clickStart[1], col, row);
+		selectGrid(clickStart[0], clickStart[1], col, row);
+    } else{
+		for(let i = block.dimensions[1]-1; i>=0; i--){
+		if (propAngle==0 && map.isTile(col, row-i)){
+        map.grid[col][row - i].highlightEdge = true;
+		map.grid[col][row - i].selectedEdge = selectEdge(cursorX,cursoyY);
+		}
+		else if (propAngle==90 && map.isTile(col+i, row)){
+        map.grid[col + i][row].highlightEdge = true;
+		}
+		else if (propAngle==180 && map.isTile(col, row+i)){
+        map.grid[col][row + i].highlightEdge = true;
+		}
+		else if (propAngle==270 && map.isTile(col-i, row)){
+        map.grid[col - i][row].highlightEdge = true;
+		}
+		}
+    }
+	}
+}
+
+function selectEdge(x,y){
+	//console.log(map.floatTileID(x,y)[0]%1);
+	if(map.floatTileID(x,y)[0]%1<0.1){
+	return 0;
+	}
+	else if(map.floatTileID(x,y)[0]%1>0.9){
+	return 2;
+	}
+	else if(map.floatTileID(x,y)[1]%1<0.1){
+	return 1;
+	}
+	else if(map.floatTileID(x,y)[1]%1>0.9){
+	return 3;
+	}
 }
 
 function highlightGrid(x1, y1, x2, y2) {
@@ -285,7 +351,10 @@ function selectGrid(x1, y1, x2, y2) {
 canvas.addEventListener("click", setTile);
 
 function setTile(event) {
-    if (renderStyle == "Iso") {
+	if(selectionType == "walls"){
+	map.setWallIso(event.offsetX,event.offsetY);
+	}
+    else if (renderStyle == "Iso") {
         if (outline) {
 			for(let i = 0; i < selection.length; i++){
 			map.moveGroundUpbyID(selection[i][0], selection[i][1], event.altKey);
