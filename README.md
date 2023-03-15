@@ -1,3 +1,3 @@
 # IsoLib
 A javascript isometric game engine
-![Screenshot (4)](https://user-images.githubusercontent.com/80480751/225288591-50e48fdc-5d21-43e0-a111-cb8b401af1aa.png)
+![Screenshot (6)](https://user-images.githubusercontent.com/80480751/225290408-5c89b427-6417-4013-ba6b-6734240b26a3.png)
