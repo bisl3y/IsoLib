@@ -33,6 +33,8 @@ let selection = [];
 let cursorX = 0;
 let cursorY = 0;
 let selectionType = "ground";
+let wallHeight = 1;
+let wallShade = 'white';
 
 function drawIso() {
     renderStyle = "Iso";
