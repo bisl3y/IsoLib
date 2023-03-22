@@ -1,13 +1,14 @@
 class tileBlock extends Image {
-    constructor(type, angleNum, dimensions) {
+    constructor(iD, type, angleNum, dimensions) {
         super();
+		this.iD = iD;
         this.blockType = type;
         this.angles = angleNum;
 		this.dimensions = dimensions;
     }
 }
 
-const defaultIso = new tileBlock('ground', 1, [1,1]);
+const defaultIso = new tileBlock('defaultIso','ground', 1, [1,1]);
 defaultIso.src = "img/pavingBlock_iso_0.png";
 
 class tile {
@@ -19,7 +20,9 @@ class tile {
 			this.highlight = false;
         }
 		this.highlightEdge = false;
+		this.highlightCorner = false;
 		this.selectedEdge = 2;
+		this.selectedCorner = 2;
 		this.walls = [0,0,0,0];
 		this.propIndex = 0;
 		this.tileAngle = 0;
@@ -32,6 +35,8 @@ class tile {
             ctx.lineTo(x - tileSize, y - tileSize / 2);
             ctx.closePath();
         }
+				
+
 		
 		this.wallPath = function wallPath(x, y, tileSize, side) {
 		if(side == 3){
@@ -110,31 +115,59 @@ class tile {
         }
 		
 			this.tileEdge = function tileEdge(x, y, tileSize) {
+			let side = this.selectedEdge
+				if(angle == 90){
+			side = this.selectedEdge +1
+			}
+			else if(angle == 180){
+			side = this.selectedEdge +2
+			}
+			else if(angle == 270){
+			side = this.selectedEdge +3
+			}
+			if(side>3){
+			side = side-4;
+			}
 			ctx.beginPath(); //should this be a case?
-			if(this.selectedEdge==2){
+			let subTiles = tileSize/8
+			if(side==2){
 			ctx.moveTo(x, y);
             ctx.lineTo(x + tileSize, y - tileSize / 2);
+			ctx.lineTo(x  + subTiles*6, y - tileSize+subTiles*3);
+			ctx.lineTo(x  - subTiles*2, y - subTiles*1);
+			ctx.closePath();
 			}
-			else if(this.selectedEdge==1){
+			else if(side==1){
 			ctx.moveTo(x + tileSize, y - tileSize / 2);
 			ctx.lineTo(x, y - tileSize);
+			ctx.lineTo(x - subTiles*2, y - tileSize +subTiles*1);
+			ctx.lineTo(x + tileSize - subTiles*2, y - tileSize / 2+subTiles*1);
+			ctx.closePath();
 			}
-			else if(this.selectedEdge==0){
+			else if(side==0){
 			ctx.moveTo(x, y - tileSize);	
 			ctx.lineTo(x - tileSize, y - tileSize / 2);
+			ctx.lineTo(x - subTiles*6, y - tileSize / 2 + subTiles*1);
+			ctx.lineTo(x + subTiles*2, y - tileSize / 2 - subTiles*3);
+			ctx.closePath();
 			}
-			else if(this.selectedEdge==3){
+			else if(side==3){
 			ctx.moveTo(x - tileSize, y - tileSize / 2);
 			ctx.lineTo(x, y);
+			ctx.lineTo(x +subTiles*2, y -subTiles*1);
+			ctx.lineTo(x - tileSize +subTiles*2, y - tileSize / 2 -subTiles*1);
+			ctx.closePath();
 			}
                                
         }
 				
 			this.drawEdge = function drawEdge(x, y, tileSize) {
             this.tileEdge(x, y, tileSize);
-			ctx.lineWidth = 5;
-			ctx.strokeStyle = 'rgba(0,255,255,0.5)';
-            ctx.stroke();
+			//ctx.lineWidth = 5;
+			//ctx.strokeStyle = 'rgba(0,255,255,0.5)';
+            //ctx.stroke();
+			ctx.fillStyle = 'rgba(0,255,255,0.5)';	
+			ctx.fill();
 			ctx.lineWidth = 1;
 			ctx.strokeStyle = 'black';
         }
@@ -145,6 +178,11 @@ class tile {
 			ctx.fillStyle = 'rgba(0,255,255,0.5)';		
             ctx.fill();
         }
+		
+		this.drawCorner = function drawCorner(x, y, tileSize, corner) {
+		ctx.beginPath();
+		ctx.arc(x, y-tileSize, 3, 0, 2 * Math.PI);
+		}
     }
 };
 
@@ -163,6 +201,11 @@ class imageTile extends tile {
                 this.ground = block;
             }
         }
+		this.clearTile = function clearTile(edge=0) {
+			if(selectionType == "walls"){				
+				this.walls[edge] = 0;
+			}
+		}
         this.drawIso = function drawIso(x, y, tileSize) {
             let widthOffsetGround = this.ground.width / this.ground.angles;
 			//do the following in reverse
@@ -178,7 +221,6 @@ class imageTile extends tile {
 			if (this.highlightEdge == true) {
 			this.drawEdge(x, y + (this.vOffset - 1) * tileSize, tileSize);
 			}
-
 			let orderOffset = angle/90
 			for(let i =0 - orderOffset;i< 2 -orderOffset;i++){ //draw any walls
 			let side = i
@@ -186,7 +228,7 @@ class imageTile extends tile {
 			side=side+4;
 			}
 			if(this.walls[side]){
-			this.drawIsoWall(x, y + (this.vOffset - 1) * tileSize, tileSize, side);	
+			this.drawWallSprite(x, y + (this.vOffset - 1) * tileSize, tileSize, side);	
 			}
 			}
 
@@ -244,12 +286,30 @@ class imageTile extends tile {
 			side=side+4;
 			}
 			if(this.walls[side]){
-			this.drawIsoWall(x, y + (this.vOffset - 1) * tileSize, tileSize, side);	
+			this.drawWallSprite(x, y + (this.vOffset - 1) * tileSize, tileSize, side);	
 			}
 			}
 			
-			
 			}
+			
+			
+		this.drawWallSprite = function drawWallSprite(x, y, tileSize, side){
+		if(angle == 90){
+			side = side +1
+		}
+		else if(angle == 180){
+			side = side +2
+		}
+		else if(angle == 270){
+			side = side +3
+		}
+		if(side>3){
+			side = side-4;
+		}
+		let sideOffset = wallImg.width / 4
+		ctx.drawImage(wallImg, sideOffset*side, 0, sideOffset, wallImg.height, x-tileSize, y-tileSize*4, sideOffset * tileSize / 64, wallImg.height * tileSize / 64);
+		}
+		
     }
 }
 
@@ -494,7 +554,6 @@ class map {
 		    this.setWallIso = function setWallIso(mouseX, mouseY) {
             let xy = this.findTileID(mouseX, mouseY);
 			let side = selectEdge(mouseX,mouseY);
-			console.log(side)
             let col = xy[0];
             let row = xy[1];
             if(this.isTile(col,row)) {
@@ -502,6 +561,15 @@ class map {
             }
         }
 
+		    this.clearWallIso = function clearWallIso(mouseX, mouseY) {
+            let xy = this.findTileID(mouseX, mouseY);
+			let side = selectEdge(mouseX,mouseY);
+            let col = xy[0];
+            let row = xy[1];
+            if(this.isTile(col,row)) {
+                this.grid[col][row].clearTile(side)
+            }
+        }
 
 		this.isTile = function isTile(col,row){
 			if (col >= 0 && col < this.mapCols && row >= 0 && row < mapRows){

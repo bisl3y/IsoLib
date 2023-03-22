@@ -1,19 +1,21 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const grassImg = new tileBlock('ground', 1, [1,1]);
-grassImg.src = "img/grassBlock_iso_0.gif";
-const crateImg = new tileBlock('prop', 1, [1,1]);
+const grassImg = new tileBlock('grassImg','ground', 1, [1,1]);
+grassImg.src = "img/grassBlock_iso_0.png";
+const crateImg = new tileBlock('crateImg','prop', 1, [1,1]);
 crateImg.src = "img/crate_iso_0.gif";
-const sofaImg = new tileBlock('prop', 4, [1,2]);
+const sofaImg = new tileBlock('sofaImg','prop', 4, [1,2]);
 sofaImg.src = "img/sofa_iso_x4.png";
-const deskImg = new tileBlock('prop', 4, [1,2]);
+const deskImg = new tileBlock('deskImg','prop', 4, [1,2]);
 deskImg.src = "img/desk_iso_x4.png";
-const plant1Img = new tileBlock('prop', 4, [1,1]);
+const plant1Img = new tileBlock('plant1Img','prop', 4, [1,1]);
 plant1Img.src = "img/plant1_iso_x4.png";
-const copierImg = new tileBlock('prop', 4, [1,1]);
+const copierImg = new tileBlock('copierImg','prop', 4, [1,1]);
 copierImg.src = "img/copier_iso_x4.png";
-const armchairImg = new tileBlock('prop', 4, [1,1]);
+const armchairImg = new tileBlock('armchairImg','prop', 4, [1,1]);
 armchairImg.src = "img/armchair_iso_x4.png";
+const wallImg = new tileBlock('wallImg','wall', 4, [1,1]);
+wallImg.src = "img/wall_iso_x4.png";
 
 let heightLimit = -3;
 let tileSize = 48;
@@ -34,7 +36,11 @@ let cursorX = 0;
 let cursorY = 0;
 let selectionType = "ground";
 let wallHeight = 1;
+wallHeight=1.5
 let wallShade = 'white';
+wallShade = 'rgba(255,255,255,0.5)'
+let saveData;
+let level = '1';
 
 function drawIso() {
     renderStyle = "Iso";
@@ -224,6 +230,7 @@ function highlight(event) {
 	}
 }
 
+
 canvas.addEventListener("mousemove", highlightEdge); 
 
 function highlightEdge(event) {
@@ -261,18 +268,57 @@ function highlightEdge(event) {
 	}
 }
 
+
+/*
+canvas.addEventListener("mousemove", highlightCorner); 
+
+function highlightCorner(event) {
+	if(selectionType == "walls"){
+	if(typeof event === 'object' && event.type=="mousemove"){
+	cursorX=event.offsetX;
+	cursoyY=event.offsetY;
+	}	
+    let hlTile = map.findTileID(cursorX, cursoyY);
+    let col = hlTile[0]
+        let row = hlTile[1]
+        //if(mouseIsDown == false){
+        map.clearHighlights();
+    //}
+    if (mouseIsDown) {
+        highlightGrid(clickStart[0], clickStart[1], col, row);
+		selectGrid(clickStart[0], clickStart[1], col, row);
+    } else{
+		for(let i = block.dimensions[1]-1; i>=0; i--){
+		if (propAngle==0 && map.isTile(col, row-i)){
+        map.grid[col][row - i].highlightCorner = true;
+		map.grid[col][row - i].selectedCorner = selectEdge(cursorX,cursoyY);
+		}
+		else if (propAngle==90 && map.isTile(col+i, row)){
+        map.grid[col + i][row].highlightCorner = true;
+		}
+		else if (propAngle==180 && map.isTile(col, row+i)){
+        map.grid[col][row + i].highlightCorner = true;
+		}
+		else if (propAngle==270 && map.isTile(col-i, row)){
+        map.grid[col - i][row].highlightCorner = true;
+		}
+		}
+    }
+	}
+}*/
+
 function selectEdge(x,y){
 	//console.log(map.floatTileID(x,y)[0]%1);
-	if(map.floatTileID(x,y)[0]%1<0.1){
+	if(map.floatTileID(x,y)[0]%1<0.3){
 	return 0;
 	}
-	else if(map.floatTileID(x,y)[0]%1>0.9){
+	else if(map.floatTileID(x,y)[0]%1>0.7){
 	return 2;
 	}
-	else if(map.floatTileID(x,y)[1]%1<0.1){
+	else if(map.floatTileID(x,y)[1]%1<0.3){
 	return 1;
 	}
-	else if(map.floatTileID(x,y)[1]%1>0.9){
+	else if(map.floatTileID(x,y)[1]%1>0.7){
 	return 3;
 	}
 }
@@ -354,7 +400,11 @@ canvas.addEventListener("click", setTile);
 
 function setTile(event) {
 	if(selectionType == "walls"){
-	map.setWallIso(event.offsetX,event.offsetY);
+		if(event.altKey){
+			map.clearWallIso(event.offsetX,event.offsetY);
+			}
+	else{map.setWallIso(event.offsetX,event.offsetY);
+	}
 	}
     else if (renderStyle == "Iso") {
         if (outline) {
@@ -379,6 +429,36 @@ function setTile(event) {
         draw2d();
     }
 };
+
+function saveMap(){
+//localStorage.setItem("lastMap", JSON.stringify(map));
+localStorage.setItem("Map"+level, JSON.stringify(map,replace));
+}
+
+function replace(key,val){
+	if(val instanceof tileBlock){
+	return val.iD}
+	else{
+	return val
+	}
+}
+
+function loadMap(){
+saveData = JSON.parse(localStorage.getItem("Map"+level));
+map = new imageMap(saveData.mapCols,saveData.mapRows);
+for(let i = 0; i<map.mapCols; i++){
+	for(let j = 0; j<map.mapRows; j++){
+	Object.assign(map.grid[i][j],saveData.grid[i][j]);
+	map.grid[i][j].ground = eval(saveData.grid[i][j].ground);
+	map.grid[i][j].prop = eval(saveData.grid[i][j].prop);
+}
+} 
+}
+
+window.addEventListener("input", mapSelect);
+function mapSelect(){
+level = document.querySelector("#map-select").value;
+}
 
 function newMap() {
     map = new imageMap(mapWidth, mapHeight);
