@@ -14,6 +14,8 @@ const copierImg = new tileBlock('copierImg','prop', 4, [1,1]);
 copierImg.src = "img/copier_iso_x4.png";
 const armchairImg = new tileBlock('armchairImg','prop', 4, [1,1]);
 armchairImg.src = "img/armchair_iso_x4.png";
+const chair1Img = new tileBlock('chair1Img','prop', 4, [1,1]);
+chair1Img.src = "img/chair_style1_iso_x4.png";
 const wallImg = new tileBlock('wallImg','wall', 4, [1,1]);
 wallImg.src = "img/wall_iso_x4.png";
 
@@ -41,6 +43,8 @@ let wallShade = 'white';
 wallShade = 'rgba(255,255,255,0.5)'
 let saveData;
 let level = '1';
+let wallAlpha = 1;
+var file
 
 function drawIso() {
     renderStyle = "Iso";
@@ -445,7 +449,11 @@ function replace(key,val){
 
 function loadMap(){
 saveData = JSON.parse(localStorage.getItem("Map"+level));
-map = new imageMap(saveData.mapCols,saveData.mapRows);
+mapBuild(saveData);
+}
+
+function mapBuild(saveData){
+	map = new imageMap(saveData.mapCols,saveData.mapRows);
 for(let i = 0; i<map.mapCols; i++){
 	for(let j = 0; j<map.mapRows; j++){
 	Object.assign(map.grid[i][j],saveData.grid[i][j]);
@@ -458,6 +466,11 @@ for(let i = 0; i<map.mapCols; i++){
 window.addEventListener("input", mapSelect);
 function mapSelect(){
 level = document.querySelector("#map-select").value;
+}
+
+window.addEventListener("input", setWallAlpha);
+function setWallAlpha(){
+wallAlpha = document.querySelector("#wall-alpha").value;
 }
 
 function newMap() {
@@ -475,6 +488,23 @@ crateImg.onload = () => {
 function draw() {
     drawMap();
     window.requestAnimationFrame(draw);
+}
+
+function download(content, fileName) {
+    var a = document.createElement("a");
+    var file = new Blob([content]);
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+function upLoad() {
+  file = document.querySelector('input[type=file]').files[0];
+  file.text().then(loadFromDisk);
+}
+
+function loadFromDisk(text){
+	mapBuild(JSON.parse(text))
 }
 
 draw();

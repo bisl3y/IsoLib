@@ -2,10 +2,29 @@
 <style>
 body{background: rgb(224,224,224); background: radial-gradient(circle, rgba(224,224,224,1) 18%, rgba(0,0,0,1) 100%);}
 div{background: rgb(224,224,224)}
+
+#itemSelect {
+  position: absolute;
+  z-index: 9;
+  top: 40px;
+  left: 1700;
+  width: 200px;
+  height: 600px;
+  border: 3px solid #73AD21;
+}
 </style>
 <canvas id="canvas" width=2048 height=1024></canvas>
+
+<!-- Selection DIV -->
+<div id="itemSelect">
+<canvas id="canvas2" width=200 height=600></canvas>
+</div>
+
 <script src="js/iso.js"></script>
 <script src="js/game.js"></script>
+<script src="js/menu.js"></script>
+
+
 <br>
 <button onclick = "x = canvas.width / 2;y = canvas.height / 2;">
 Center Map
@@ -52,8 +71,8 @@ Grass
 <button onclick = "block = defaultIso">
 Paving
 </button>
-<button onclick = "block = crateImg">
-Crate
+<button onclick = "block = chair1Img">
+Chair1
 </button>
 <button onclick = "block = sofaImg">
 Sofa
@@ -75,8 +94,9 @@ Armchair
 <button onclick = "newMap()">
 New Map
 </button>
+<br>
 <button onclick = "saveMap()">
-Save Map
+Save local
 </button>
 <select name="maps" id="map-select">
     <option value=1>Map 1</option>
@@ -90,8 +110,13 @@ Save Map
 			    <option value=9>Map 9</option>
 </select>
 <button onclick = "loadMap()">
-Load Map
+Load local
 </button>
+<button onclick = "download(JSON.stringify(map,replace), 'Map'+level+'.json');">
+Save to file
+</button>
+<input type="file" onchange="upLoad()">
+Wall Transparency:<input id="wall-alpha" value="1" type="range" min="0" max="1" step="any"/>
 <div>
 <p>Scroll in and out of the map using the mouse wheel. Hold and drag the mouse wheel to move around the map.</p>
 <p>Use the 'Z' and 'X' keys to rotate the map. Press 'O' to toggle landscaping mode (click to raise ground, ALT+click to lower.)</p>

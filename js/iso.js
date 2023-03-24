@@ -307,7 +307,9 @@ class imageTile extends tile {
 			side = side-4;
 		}
 		let sideOffset = wallImg.width / 4
+		ctx.globalAlpha = wallAlpha;
 		ctx.drawImage(wallImg, sideOffset*side, 0, sideOffset, wallImg.height, x-tileSize, y-tileSize*4, sideOffset * tileSize / 64, wallImg.height * tileSize / 64);
+		ctx.globalAlpha = 1;
 		}
 		
     }
