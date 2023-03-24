@@ -8,9 +8,6 @@ class tileBlock extends Image {
     }
 }
 
-const defaultIso = new tileBlock('defaultIso','ground', 1, [1,1]);
-defaultIso.src = "img/pavingBlock_iso_0.png";
-
 class tile {
     constructor() {
         this.shade = 'white'

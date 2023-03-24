@@ -1,23 +1,5 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const grassImg = new tileBlock('grassImg','ground', 1, [1,1]);
-grassImg.src = "img/grassBlock_iso_0.png";
-const crateImg = new tileBlock('crateImg','prop', 1, [1,1]);
-crateImg.src = "img/crate_iso_0.gif";
-const sofaImg = new tileBlock('sofaImg','prop', 4, [1,2]);
-sofaImg.src = "img/sofa_iso_x4.png";
-const deskImg = new tileBlock('deskImg','prop', 4, [1,2]);
-deskImg.src = "img/desk_iso_x4.png";
-const plant1Img = new tileBlock('plant1Img','prop', 4, [1,1]);
-plant1Img.src = "img/plant1_iso_x4.png";
-const copierImg = new tileBlock('copierImg','prop', 4, [1,1]);
-copierImg.src = "img/copier_iso_x4.png";
-const armchairImg = new tileBlock('armchairImg','prop', 4, [1,1]);
-armchairImg.src = "img/armchair_iso_x4.png";
-const chair1Img = new tileBlock('chair1Img','prop', 4, [1,1]);
-chair1Img.src = "img/chair_style1_iso_x4.png";
-const wallImg = new tileBlock('wallImg','wall', 4, [1,1]);
-wallImg.src = "img/wall_iso_x4.png";
 
 let heightLimit = -3;
 let tileSize = 48;
